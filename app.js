@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,7 +25,7 @@ require('./models/Recommendation');
 
 // Connect to MongoDB
 mongoose.connect(mongoUri)
-  .then(() => console.log('MongoDB Connected'))
+  .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Middleware
@@ -78,6 +79,99 @@ app.get('/', (req, res) => {
   res.render('layouts/main', { body: 'partials/home' });
 });
 
+// ── Health Check ─────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'SNAP GovTech Platform', version: '1.0.0' });
+});
+
+// ── RAG Engine Integration ───────────────────────────────
+// Serve standalone RAG Engine frontend
+app.get('/rag', (req, res) => {
+  const ragFrontend = path.join(__dirname, 'rag-engine', 'frontend', 'index.html');
+  const fs = require('fs');
+  if (fs.existsSync(ragFrontend)) {
+    res.sendFile(ragFrontend);
+  } else {
+    res.json({ message: 'RAG Engine frontend not found. API available at /rag/health' });
+  }
+});
+
+// Proxy RAG API requests to internal FastAPI microservice (port 8000)
+const ragBaseUrl = process.env.RAG_ENGINE_URL || 'http://127.0.0.1:8000';
+
+app.all(/^\/(problem|startup\/upload|shortlist|search|problems)/, async (req, res) => {
+  try {
+    const targetUrl = `${ragBaseUrl}${req.originalUrl}`;
+    const headers = { ...req.headers };
+    delete headers.host;
+
+    const fetchOptions = {
+      method: req.method,
+      headers: headers,
+      signal: AbortSignal.timeout(180000) // 3 min timeout for scoring
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      fetchOptions.body = req;
+      fetchOptions.duplex = 'half';
+    }
+
+    const response = await fetch(targetUrl, fetchOptions);
+    res.status(response.status);
+    response.headers.forEach((v, k) => {
+      if (k.toLowerCase() !== 'transfer-encoding') {
+        res.setHeader(k, v);
+      }
+    });
+    const data = await response.arrayBuffer();
+    res.send(Buffer.from(data));
+  } catch (err) {
+    console.error('[RAG Proxy] Error:', err.message);
+    res.status(502).json({
+      error: 'RAG Engine unavailable',
+      detail: err.message,
+      hint: 'Ensure the RAG Engine is running: cd rag-engine && python -m uvicorn main:app --port 8000'
+    });
+  }
+});
+
+// ── Auto-start RAG Engine ────────────────────────────────
+const ragService = require('./services/ragService');
+
+function ensureRagEngine() {
+  ragService.isAvailable().then(isOnline => {
+    if (isOnline) {
+      console.log('⚡ RAG Engine is active on', ragBaseUrl);
+    } else {
+      console.log('🚀 Auto-starting RAG Engine (port 8000)...');
+      const ragDir = path.join(__dirname, 'rag-engine');
+
+      // Try python executable from env, then common paths
+      const pythonExe = process.env.PYTHON_PATH || 'python';
+
+      const pyProc = spawn(pythonExe, ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
+        cwd: ragDir,
+        stdio: 'inherit',
+        shell: false
+      });
+
+      pyProc.on('error', (err) => {
+        console.warn('⚠️  RAG Engine auto-start failed:', err.message);
+        console.warn('   To start manually: cd rag-engine && pip install -r requirements.txt && python -m uvicorn main:app --port 8000');
+      });
+
+      process.on('exit', () => { try { pyProc.kill(); } catch (_) {} });
+    }
+  }).catch(() => {
+    console.warn('⚠️  Could not check RAG Engine status. Start it manually if needed.');
+  });
+}
+
+// ── Start Server ─────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log('====================================================');
+  console.log(` SNAP GovTech Platform running on http://localhost:${PORT}`);
+  console.log(` AI RAG Engine expected on ${ragBaseUrl}`);
+  console.log('====================================================');
+  ensureRagEngine();
 });

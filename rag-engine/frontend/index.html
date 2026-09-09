@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAP RAG Engine — Startup Shortlisting</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f172a; color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-bottom: 1px solid #334155;
+            padding: 1rem 2rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .header h1 { font-size: 1.5rem; color: #38bdf8; }
+        .header span { color: #94a3b8; font-size: 0.9rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        /* Cards */
+        .card {
+            background: #1e293b; border: 1px solid #334155;
+            border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+        }
+        .card h2 { color: #38bdf8; margin-bottom: 1rem; font-size: 1.1rem; }
+
+        /* Forms */
+        textarea, input[type="text"], select {
+            width: 100%; padding: 0.75rem; border-radius: 8px;
+            border: 1px solid #475569; background: #0f172a; color: #e2e8f0;
+            font-size: 0.9rem; margin-bottom: 0.75rem; resize: vertical;
+        }
+        textarea:focus, input:focus { border-color: #38bdf8; outline: none; }
+        input[type="file"] { color: #94a3b8; margin-bottom: 0.75rem; }
+        label { display: block; color: #94a3b8; margin-bottom: 0.25rem; font-size: 0.85rem; }
+
+        .btn {
+            padding: 0.6rem 1.5rem; border: none; border-radius: 8px;
+            font-size: 0.9rem; cursor: pointer; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #38bdf8; color: #0f172a; }
+        .btn-primary:hover { background: #7dd3fc; }
+        .btn-secondary { background: #334155; color: #e2e8f0; }
+        .btn-secondary:hover { background: #475569; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #334155; color: #38bdf8; padding: 0.6rem 0.75rem; text-align: left; white-space: nowrap; }
+        td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; vertical-align: top; }
+        tr:hover td { background: #1e293b; }
+
+        .score-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-weight: 600; font-size: 0.85rem;
+        }
+        .score-high { background: #064e3b; color: #34d399; }
+        .score-mid { background: #713f12; color: #fbbf24; }
+        .score-low { background: #7f1d1d; color: #f87171; }
+
+        .flag { background: #7f1d1d; color: #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; display: inline-block; margin: 2px; }
+        .justification { font-size: 0.75rem; color: #94a3b8; max-width: 200px; }
+
+        /* Status */
+        .status { padding: 0.5rem 1rem; border-radius: 8px; margin: 0.75rem 0; font-size: 0.85rem; }
+        .status-ok { background: #064e3b; color: #34d399; }
+        .status-err { background: #7f1d1d; color: #f87171; }
+        .status-info { background: #1e3a5f; color: #7dd3fc; }
+
+        .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .row > .card { flex: 1; min-width: 300px; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #475569;
+            border-top: 2px solid #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Search results */
+        .search-result { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; }
+        .search-result .name { color: #38bdf8; font-weight: 600; }
+        .search-result .chunk { color: #94a3b8; font-size: 0.8rem; margin-top: 0.25rem; }
+        .search-result .sim { color: #34d399; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚡ SNAP RAG Engine</h1>
+    <span>AI-Powered Startup Solution Shortlisting</span>
+</div>
+
+<div class="container">
+
+    <!-- Step 1: Problem Statement -->
+    <div class="card">
+        <h2>1️⃣ Upload Government Problem Statement</h2>
+        <textarea id="problemText" rows="5" placeholder="Paste the government problem statement here..."></textarea>
+        <button class="btn btn-primary" onclick="submitProblem()" id="btnProblem">Submit Problem</button>
+        <div id="problemStatus"></div>
+    </div>
+
+    <!-- Step 2: Upload Solutions -->
+    <div class="row">
+        <div class="card">
+            <h2>2️⃣ Upload Startup Solutions</h2>
+            <label>Problem ID</label>
+            <input type="text" id="problemId" placeholder="Enter problem ID from Step 1" />
+            <label>Startup Name (optional)</label>
+            <input type="text" id="startupName" placeholder="e.g. TechSense Solutions" />
+            <label>Solution Document (PDF/DOCX)</label>
+            <input type="file" id="solutionFile" accept=".pdf,.docx,.doc" />
+            <button class="btn btn-primary" onclick="uploadSolution()" id="btnUpload">Upload & Process</button>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Uploaded Solutions</h2>
+            <button class="btn btn-secondary" onclick="loadSolutions()" style="margin-bottom:0.75rem">Refresh List</button>
+            <div id="solutionList" style="font-size:0.85rem; color:#94a3b8;">Enter a problem ID and click Refresh</div>
+        </div>
+    </div>
+
+    <!-- Step 3: Shortlist -->
+    <div class="card">
+        <h2>3️⃣ Generate Ranked Shortlist</h2>
+        <label>Problem ID</label>
+        <input type="text" id="shortlistProblemId" placeholder="Enter problem ID" style="max-width:200px;display:inline-block" />
+        <button class="btn btn-primary" onclick="getShortlist(false)" id="btnShortlist">Get Shortlist</button>
+        <button class="btn btn-secondary" onclick="getShortlist(true)" id="btnRescore">Re-Score (uses API)</button>
+        <div id="shortlistStatus"></div>
+        <div id="shortlistTable" class="table-wrap" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- Step 4: RAG Search -->
+    <div class="card">
+        <h2>🔍 Semantic Search Across Solutions</h2>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <input type="text" id="searchProblemId" placeholder="Problem ID (optional)" style="max-width:160px" />
+            <input type="text" id="searchQuery" placeholder="Search query (e.g. IoT sensors, radar, drone)" style="flex:1;min-width:200px" />
+            <button class="btn btn-primary" onclick="doSearch()">Search</button>
+        </div>
+        <div id="searchResults" style="margin-top:0.75rem"></div>
+    </div>
+</div>
+
+<script>
+const API = '';  // same origin
+
+function setStatus(el, msg, type) {
+    el.innerHTML = `<div class="status status-${type}">${msg}</div>`;
+}
+
+async function submitProblem() {
+    const btn = document.getElementById('btnProblem');
+    const status = document.getElementById('problemStatus');
+    const text = document.getElementById('problemText').value.trim();
+    if (!text) return setStatus(status, 'Please enter a problem statement.', 'err');
+
+    btn.disabled = true;
+    setStatus(status, '<span class="spinner"></span> Extracting requirements with AI...', 'info');
+
+    try {
+        const res = await fetch(API + '/problem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ problem_text: text })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed');
+
+        document.getElementById('problemId').value = data.problem_id;
+        document.getElementById('shortlistProblemId').value = data.problem_id;
+        document.getElementById('searchProblemId').value = data.problem_id;
+
+        setStatus(status,
+            `✅ Problem ID: <strong>${data.problem_id}</strong> created.<br>` +
+            `<strong>Outcomes:</strong> ${(data.requirements.outcomes_wanted || []).join(', ')}<br>` +
+            `<strong>Must-have:</strong> ${(data.requirements.must_have_criteria || []).join(', ')}`, 'ok');
+    } catch (e) {
+        setStatus(status, '❌ ' + e.message, 'err');
+    }
+    btn.disabled = false;
+}
+
+async function uploadSolution() {
+    const btn = document.getElementById('btnUpload');
+    const status = document.getElementById('uploadStatus');
+    const pid = document.getElementById('problemId').value.trim();
+    const name = document.getElementById('startupName').value.trim();
+    const file = document.getElementById('solutionFile').files[0];
+
+    if (!pid) return setStatus(status, 'Enter problem ID first.', 'err');
+    if (!file) return setStatus(status, 'Select a PDF or DOCX file.', 'err');
+
+    btn.disabled = true;
+    setStatus(status, '<span class="spinner"></span> Parsing doc → Checking eligibility → Extracting details → Checking consistency → Indexing...', 'info');
+
+    const fd = new FormData();
+    fd.append('problem_id', pid);
+    fd.append('file', file);
+    if (name) fd.append('startup_name', name);
+
+    try {
+        const res = await fetch(API + '/startup/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed');
+
+        let html = `✅ <strong>${data.startup_name}</strong> (ID: ${data.solution_id})`;
+        html += ` — ${data.eligible ? '✅ Eligible' : '❌ Ineligible'}: ${data.eligibility_reason}`;
+        if (data.consistency_flags && data.consistency_flags.length > 0) {
+            html += '<br>⚠️ Flags: ' + data.consistency_flags.map(f => `<span class="flag">${f}</span>`).join(' ');
+        }
+        html += `<br><small>Approach: ${data.solution_summary.approach}</small>`;
+        setStatus(status, html, 'ok');
+        document.getElementById('solutionFile').value = '';
+        document.getElementById('startupName').value = '';
+    } catch (e) {
+        setStatus(status, '❌ ' + e.message, 'err');
+    }
+    btn.disabled = false;
+}
+
+async function loadSolutions() {
+    const pid = document.getElementById('problemId').value.trim();
+    const el = document.getElementById('solutionList');
+    if (!pid) { el.textContent = 'Enter problem ID first.'; return; }
+
+    try {
+        const res = await fetch(API + `/shortlist/${pid}/all`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed');
+
+        if (!data.solutions || data.solutions.length === 0) {
+            el.textContent = 'No solutions uploaded yet.';
+            return;
+        }
+        let html = '<ul style="list-style:none;padding:0">';
+        data.solutions.forEach(s => {
+            const icon = s.eligible ? '✅' : '❌';
+            html += `<li style="margin:4px 0">${icon} <strong>${s.startup_name}</strong> (${s.filename}) — ${s.eligibility_reason || 'OK'}</li>`;
+        });
+        html += '</ul>';
+        el.innerHTML = html;
+    } catch (e) {
+        el.textContent = 'Error: ' + e.message;
+    }
+}
+
+async function getShortlist(rescore) {
+    const btn = document.getElementById(rescore ? 'btnRescore' : 'btnShortlist');
+    const status = document.getElementById('shortlistStatus');
+    const tableEl = document.getElementById('shortlistTable');
+    const pid = document.getElementById('shortlistProblemId').value.trim();
+    if (!pid) return setStatus(status, 'Enter problem ID.', 'err');
+
+    btn.disabled = true;
+    setStatus(status, `<span class="spinner"></span> ${rescore ? 'Re-scoring all solutions with AI...' : 'Loading shortlist...'}`, 'info');
+
+    try {
+        const res = await fetch(API + `/shortlist/${pid}?rescore=${rescore}&top_n=15`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed');
+
+        if (data.status === 'no_solutions') {
+            setStatus(status, '⚠️ No eligible solutions found.', 'err');
+            tableEl.innerHTML = '';
+            return;
+        }
+
+        setStatus(status, `✅ ${data.shortlisted} solutions ranked out of ${data.total_eligible} eligible.`, 'ok');
+        tableEl.innerHTML = buildRankTable(data.ranked_solutions);
+    } catch (e) {
+        setStatus(status, '❌ ' + e.message, 'err');
+    }
+    btn.disabled = false;
+}
+
+function buildRankTable(solutions) {
+    let html = `
+        <div style="margin-bottom:1rem;padding:0.75rem;background:#1e293b;border-radius:8px;border:1px solid #334155;font-size:0.85rem">
+            <div style="font-weight:600;margin-bottom:0.4rem;color:#f8fafc">⚖️ Official 8-Parameter Evaluation Framework (100% Total):</div>
+            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;color:#cbd5e1">
+                <span>🎯 Tech Fit (25%)</span>
+                <span>📈 Impact (20%)</span>
+                <span>⚙️ Feasibility (15%)</span>
+                <span>💰 Cost (10%)</span>
+                <span>🚀 Scalability (10%)</span>
+                <span>🔒 Security (10%)</span>
+                <span>👥 Team (5%)</span>
+                <span>💡 Innovation (5%)</span>
+            </div>
+        </div>
+        <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Startup</th>
+                <th>Score</th>
+                <th>Doability</th>
+                <th>Tech Fit<br><small style="color:#94a3b8">25%</small></th>
+                <th>Impact<br><small style="color:#94a3b8">20%</small></th>
+                <th>Feasibility<br><small style="color:#94a3b8">15%</small></th>
+                <th>Cost<br><small style="color:#94a3b8">10%</small></th>
+                <th>Scale<br><small style="color:#94a3b8">10%</small></th>
+                <th>Security<br><small style="color:#94a3b8">10%</small></th>
+                <th>Team<br><small style="color:#94a3b8">5%</small></th>
+                <th>Innov.<br><small style="color:#94a3b8">5%</small></th>
+                <th>Flags / Penalties</th>
+                <th>AI Justification</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    solutions.forEach(s => {
+        const sc = s.final_score;
+        const cls = sc >= 7 ? 'score-high' : sc >= 4 ? 'score-mid' : 'score-low';
+        const flags = (s.consistency_flags || []).map(f => `<span class="flag">${f}</span>`).join(' ') || '—';
+        const just = s.justification || {};
+        const justHtml = Object.entries(just).map(([k,v]) => `<strong>${k.replace(/_/g, ' ')}:</strong> ${v}`).join('<br>');
+        
+        const isDoable = s.is_doable !== false;
+        const doabilityBadge = isDoable 
+            ? `<span class="score-badge score-high" title="Solution is technically & logically feasible">✓ Doable</span>`
+            : `<span class="score-badge score-low" title="${s.doability_reason || 'Infeasible'}">✕ Infeasible</span>`;
+
+        const scores = s.scores || {};
+        const techFit = scores.problem_technical_fit ?? scores.relevance ?? 0;
+        const impact = scores.expected_impact ?? scores.impact ?? 0;
+        const feasibility = scores.feasibility_of_implementation ?? scores.feasibility ?? 0;
+        const cost = scores.cost_effectiveness ?? scores.cost ?? 0;
+        const scalability = scores.scalability ?? 0;
+        const security = scores.security_data_privacy ?? scores.security ?? 0;
+        const team = scores.startup_capability_team ?? scores.team_credibility ?? 0;
+        const innovation = scores.innovation ?? 0;
+
+        html += `<tr>
+            <td><strong>#${s.rank}</strong></td>
+            <td><strong>${s.startup_name}</strong><br><small style="color:#64748b">${s.filename || ''}</small></td>
+            <td><span class="score-badge ${cls}">${sc}/10</span></td>
+            <td>${doabilityBadge}</td>
+            <td>${scoreBadge(techFit)}</td>
+            <td>${scoreBadge(impact)}</td>
+            <td>${scoreBadge(feasibility)}</td>
+            <td>${scoreBadge(cost)}</td>
+            <td>${scoreBadge(scalability)}</td>
+            <td>${scoreBadge(security)}</td>
+            <td>${scoreBadge(team)}</td>
+            <td>${scoreBadge(innovation)}</td>
+            <td>
+                ${flags}
+                ${s.penalty_applied > 0 ? `<br><small style="color:#f87171">-${s.penalty_applied} penalty</small>` : ''}
+                ${!isDoable ? `<br><small style="color:#f87171">(-3.0 infeasible)</small>` : ''}
+            </td>
+            <td class="justification" style="max-width:280px;line-height:1.35">${justHtml || '—'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+}
+
+function scoreBadge(val) {
+    val = Number(val || 0);
+    const cls = val >= 4 ? 'score-high' : val >= 3 ? 'score-mid' : 'score-low';
+    return `<span class="score-badge ${cls}">${val}/5</span>`;
+}
+
+async function doSearch() {
+    const pid = document.getElementById('searchProblemId').value.trim();
+    const q = document.getElementById('searchQuery').value.trim();
+    const el = document.getElementById('searchResults');
+    if (!q) { el.innerHTML = '<div class="status status-err">Enter a search query.</div>'; return; }
+
+    el.innerHTML = '<span class="spinner"></span> Searching...';
+    try {
+        const paramStr = pid ? `query=${encodeURIComponent(q)}&problem_id=${encodeURIComponent(pid)}&top_k=10` : `query=${encodeURIComponent(q)}&top_k=10`;
+        const res = await fetch(API + `/search?${paramStr}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed');
+        if (!data.results || data.results.length === 0) {
+            el.innerHTML = '<div class="status status-info">No matching solution passages found.</div>';
+            return;
+        }
+        el.innerHTML = data.results.map(r =>
+            `<div class="search-result">
+                <span class="name">${r.startup_name}</span>
+                <span class="sim">(similarity: ${r.similarity_score})</span>
+                <div class="chunk">${r.chunk.substring(0, 300)}${r.chunk.length > 300 ? '...' : ''}</div>
+            </div>`
+        ).join('');
+    } catch (e) {
+        el.innerHTML = `<div class="status status-err">❌ ${e.message}</div>`;
+    }
+}
+</script>
+</body>
+</html>

@@ -1,12 +1,14 @@
 {
   "name": "snap",
   "version": "1.0.0",
-  "description": "",
+  "description": "SNAP - Startup Network & Automated Procurement with AI RAG Engine",
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
     "tailwind": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch",
+    "rag:install": "cd rag-engine && pip install -r requirements.txt",
+    "rag:start": "cd rag-engine && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -22,6 +24,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.9.5",
+    "multer": "^2.3.0",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3"

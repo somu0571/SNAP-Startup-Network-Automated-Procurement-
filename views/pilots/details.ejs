@@ -4,23 +4,27 @@
             <div class="flex items-center gap-2 mb-1">
                 <a href="/government/pilots" class="text-sm text-primary hover:underline">&larr; Pilots</a>
                 <span class="text-gray-300">/</span>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700"><%= pilot.department ? pilot.department.name : 'Department' %></span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700">
+                    <%= pilot.department ? pilot.department.name : 'Department' %>
+                </span>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900 tracking-tight"><%= pilot.objective %></h1>
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+                <%= pilot.objective %>
+            </h1>
         </div>
-        
+
         <span class="px-4 py-1.5 rounded-full font-bold text-xs tracking-wider uppercase shadow-sm
             <%= pilot.status === 'ACTIVE' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
                (pilot.status === 'SCALE_UP_RECOMMENDED' || pilot.status === 'VALIDATED' ? 'bg-green-100 text-green-800 border border-green-200' : 
                'bg-gray-100 text-gray-800 border border-gray-200') %>">
-            STATUS: <%= pilot.status.replace(/_/g, ' ') %>
+            STATUS: <%= pilot.status.replace(/_/g, ' ' ) %>
         </span>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <div class="lg:col-span-2 space-y-6">
-        
+
         <!-- KPI Dashboard -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/75 flex justify-between items-center">
@@ -28,79 +32,106 @@
                     <h2 class="text-lg font-bold text-gray-900">KPI Performance Tracking</h2>
                     <p class="text-xs text-gray-500">Quantitative metrics defined for pilot success criteria</p>
                 </div>
-                <% if (user.role === 'GOVERNMENT' || user.role === 'EVALUATOR' || user.role === 'ADMIN') { %>
-                    <% if (pilot.status === 'ACTIVE') { %>
-                        <a href="/government/pilots/<%= pilot._id %>/kpis" class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <% if (user.role==='GOVERNMENT' || user.role==='EVALUATOR' || user.role==='ADMIN' ) { %>
+                    <% if (pilot.status==='ACTIVE' ) { %>
+                        <a href="/government/pilots/<%= pilot._id %>/kpis"
+                            class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
                             Record Data
                         </a>
-                    <% } %>
-                <% } %>
+                        <% } %>
+                            <% } %>
             </div>
-            
+
             <div class="p-6">
-                <% if (kpiData && kpiData.length > 0) { %>
+                <% if (kpiData && kpiData.length> 0) { %>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <% kpiData.forEach(kpi => { %>
-                            <div class="bg-white border <%= kpi.achievement >= 100 ? 'border-green-300 ring-1 ring-green-200' : 'border-gray-200' %> rounded-xl p-5 shadow-sm relative overflow-hidden">
-                                <% if (kpi.achievement >= 100) { %>
+                        <% kpiData.forEach(kpi=> { %>
+                            <div
+                                class="bg-white border <%= kpi.achievement >= 100 ? 'border-green-300 ring-1 ring-green-200' : 'border-gray-200' %> rounded-xl p-5 shadow-sm relative overflow-hidden">
+                                <% if (kpi.achievement>= 100) { %>
                                     <div class="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-                                        <div class="bg-green-500 text-white text-[10px] font-extrabold py-1 w-24 text-center transform rotate-45 translate-x-4 -translate-y-2 shadow-sm">MET</div>
+                                        <div
+                                            class="bg-green-500 text-white text-[10px] font-extrabold py-1 w-24 text-center transform rotate-45 translate-x-4 -translate-y-2 shadow-sm">
+                                            MET</div>
                                     </div>
-                                <% } %>
-                                
-                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><%= kpi.name %></h3>
-                                
-                                <div class="flex items-end justify-between mb-2">
-                                    <div class="text-3xl font-extrabold text-gray-900"><%= kpi.latest %></div>
-                                    <div class="text-xs font-medium text-gray-500 text-right">
-                                        Baseline: <span class="font-semibold text-gray-700"><%= kpi.baseline %></span><br>
-                                        Target: <span class="text-primary font-bold"><%= kpi.target %></span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Progress bar -->
-                                <div class="mt-4">
-                                    <div class="flex justify-between text-xs mb-1">
-                                        <span class="text-gray-500 font-medium">Progress</span>
-                                        <span class="font-bold <%= kpi.achievement >= 100 ? 'text-green-600' : 'text-primary' %>"><%= kpi.achievement %>%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                        <div class="<%= kpi.achievement >= 100 ? 'bg-green-500' : 'bg-primary' %> h-2.5 rounded-full transition-all duration-500" style="width: <%= Math.min(100, Math.max(0, kpi.achievement)) %>%"></div>
-                                    </div>
-                                </div>
+                                    <% } %>
+
+                                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                            <%= kpi.name %>
+                                        </h3>
+
+                                        <div class="flex items-end justify-between mb-2">
+                                            <div class="text-3xl font-extrabold text-gray-900">
+                                                <%= kpi.latest %>
+                                            </div>
+                                            <div class="text-xs font-medium text-gray-500 text-right">
+                                                Baseline: <span class="font-semibold text-gray-700">
+                                                    <%= kpi.baseline %>
+                                                </span><br>
+                                                Target: <span class="text-primary font-bold">
+                                                    <%= kpi.target %>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Progress bar -->
+                                        <div class="mt-4">
+                                            <div class="flex justify-between text-xs mb-1">
+                                                <span class="text-gray-500 font-medium">Progress</span>
+                                                <span
+                                                    class="font-bold <%= kpi.achievement >= 100 ? 'text-green-600' : 'text-primary' %>">
+                                                    <%= kpi.achievement %>%
+                                                </span>
+                                            </div>
+                                            <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                                                <div class="<%= (Number(kpi.achievement) || 0) >= 100 ? 'bg-green-500' : 'bg-primary' %> h-2.5 rounded-full transition-all duration-500"
+                                                    style="width: <%= Math.min(100, Math.max(0, Number(kpi.achievement) || 0)) %>%">
+                                                </div>
+                                            </div>
+                                        </div>
                             </div>
-                        <% }) %>
+                            <% }) %>
                     </div>
-                <% } else { %>
-                    <p class="text-gray-500 italic">No KPIs defined for this pilot.</p>
-                <% } %>
+                    <% } else { %>
+                        <p class="text-gray-500 italic">No KPIs defined for this pilot.</p>
+                        <% } %>
             </div>
         </div>
 
         <!-- Pilot Details Overview -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Pilot Parameters</h2>
-            
+
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-2">
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Target Challenge</h3>
-                    <a href="/challenges/<%= pilot.challenge._id %>" class="text-sm font-semibold text-primary hover:underline mt-1 block"><%= pilot.challenge.title %></a>
+                    <a href="/challenges/<%= pilot.challenge._id %>"
+                        class="text-sm font-semibold text-primary hover:underline mt-1 block">
+                        <%= pilot.challenge.title %>
+                    </a>
                 </div>
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Partner Startup</h3>
-                    <p class="text-sm text-gray-900 font-semibold mt-1"><%= pilot.startup.name %></p>
+                    <p class="text-sm text-gray-900 font-semibold mt-1">
+                        <%= pilot.startup.name %>
+                    </p>
                 </div>
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pilot Timeline</h3>
                     <p class="text-sm text-gray-900 font-medium mt-1">
-                        <%= pilot.startDate ? new Date(pilot.startDate).toLocaleDateString() : 'TBD' %> - 
-                        <%= pilot.endDate ? new Date(pilot.endDate).toLocaleDateString() : 'TBD' %>
+                        <%= pilot.startDate ? new Date(pilot.startDate).toLocaleDateString() : 'TBD' %> -
+                            <%= pilot.endDate ? new Date(pilot.endDate).toLocaleDateString() : 'TBD' %>
                     </p>
                 </div>
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Allocated Budget</h3>
-                    <p class="text-sm text-gray-900 font-semibold mt-1"><%= pilot.budget ? '$' + pilot.budget.toLocaleString() : 'N/A' %></p>
+                    <p class="text-sm text-gray-900 font-semibold mt-1">
+                        <%= pilot.budget ? '$' + pilot.budget.toLocaleString() : 'N/A' %>
+                    </p>
                 </div>
             </div>
         </div>
@@ -112,8 +143,11 @@
                     <h2 class="text-lg font-bold text-gray-900">Verification Evidence & Telemetry</h2>
                     <p class="text-xs text-gray-500">Audit-ready documentation and field test reports</p>
                 </div>
-                <button onclick="document.getElementById('evidenceModal').classList.toggle('hidden')" class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <button onclick="document.getElementById('evidenceModal').classList.toggle('hidden')"
+                    class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     Attach Evidence
                 </button>
             </div>
@@ -124,7 +158,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Evidence Category</label>
-                            <select name="category" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                            <select name="category"
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
                                 <option value="Performance Report">Performance Report</option>
                                 <option value="Field Telemetry Data">Field Telemetry Data</option>
                                 <option value="Stakeholder Survey">Stakeholder Survey</option>
@@ -132,45 +167,60 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Document Name / File Ref</label>
-                            <input type="text" name="filename" value="field_test_results_v1.pdf" required class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Document Name / File
+                                Ref</label>
+                            <input type="text" name="filename" value="field_test_results_v1.pdf" required
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Verification Description</label>
-                        <input type="text" name="description" placeholder="Summary of what this evidence verifies..." required class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                        <input type="text" name="description" placeholder="Summary of what this evidence verifies..."
+                            required
+                            class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="document.getElementById('evidenceModal').classList.add('hidden')" class="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-100">Cancel</button>
-                        <button type="submit" class="px-4 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow-sm">Save Evidence</button>
+                        <button type="button" onclick="document.getElementById('evidenceModal').classList.add('hidden')"
+                            class="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-100">Cancel</button>
+                        <button type="submit"
+                            class="px-4 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow-sm">Save
+                            Evidence</button>
                     </div>
                 </form>
             </div>
 
-            <% if (pilot.evidence && pilot.evidence.length > 0) { %>
+            <% if (pilot.evidence && pilot.evidence.length> 0) { %>
                 <div class="divide-y divide-gray-100">
-                    <% pilot.evidence.forEach(item => { %>
+                    <% pilot.evidence.forEach(item=> { %>
                         <div class="py-3 flex justify-between items-center">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
                                 </div>
                                 <div>
-                                    <div class="text-sm font-semibold text-gray-900"><%= item.filename %></div>
-                                    <div class="text-xs text-gray-500"><%= item.category %> &bull; <%= item.description %></div>
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        <%= item.filename %>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        <%= item.category %> &bull; <%= item.description %>
+                                    </div>
                                 </div>
                             </div>
                             <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">
                                 <%= item.verificationStatus || 'VERIFIED' %>
                             </span>
                         </div>
-                    <% }) %>
+                        <% }) %>
                 </div>
-            <% } else { %>
-                <div class="text-center py-6 text-gray-400 text-xs italic">
-                    No evidence documents attached yet. Attach field test logs and reports above.
-                </div>
-            <% } %>
+                <% } else { %>
+                    <div class="text-center py-6 text-gray-400 text-xs italic">
+                        No evidence documents attached yet. Attach field test logs and reports above.
+                    </div>
+                    <% } %>
         </div>
 
         <!-- Stakeholder Feedback History -->
@@ -180,8 +230,11 @@
                     <h2 class="text-lg font-bold text-gray-900">Stakeholder Feedback & Operational Reviews</h2>
                     <p class="text-xs text-gray-500">Subject-matter evaluations from front-line government operators</p>
                 </div>
-                <button onclick="document.getElementById('feedbackModal').classList.toggle('hidden')" class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <button onclick="document.getElementById('feedbackModal').classList.toggle('hidden')"
+                    class="text-xs font-semibold bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md shadow-sm transition-colors flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     Add Feedback
                 </button>
             </div>
@@ -192,7 +245,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Overall Rating (1-5)</label>
-                            <select name="rating" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
+                            <select name="rating"
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
                                 <option value="5">5 - Outstanding</option>
                                 <option value="4" selected>4 - Exceeds Criteria</option>
                                 <option value="3">3 - Satisfactory</option>
@@ -202,7 +256,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Usability</label>
-                            <select name="usability" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
+                            <select name="usability"
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
                                 <option value="Intuitive & Seamless" selected>Intuitive & Seamless</option>
                                 <option value="Acceptable with training">Acceptable with training</option>
                                 <option value="Complex / Friction">Complex / Friction</option>
@@ -210,7 +265,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Effectiveness</label>
-                            <select name="effectiveness" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
+                            <select name="effectiveness"
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
                                 <option value="High Impact" selected>High Impact</option>
                                 <option value="Moderate Impact">Moderate Impact</option>
                                 <option value="Low Impact">Low Impact</option>
@@ -218,7 +274,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Reliability</label>
-                            <select name="reliability" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
+                            <select name="reliability"
+                                class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary">
                                 <option value="Stable & Scalable" selected>Stable & Scalable</option>
                                 <option value="Minor Glitches">Minor Glitches</option>
                                 <option value="Unstable">Unstable</option>
@@ -226,24 +283,34 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Detailed Operational Comments</label>
-                        <textarea name="comments" rows="2" placeholder="Describe field team reactions and workflow fit..." required class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary"></textarea>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Detailed Operational
+                            Comments</label>
+                        <textarea name="comments" rows="2"
+                            placeholder="Describe field team reactions and workflow fit..." required
+                            class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-primary"></textarea>
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="document.getElementById('feedbackModal').classList.add('hidden')" class="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-100">Cancel</button>
-                        <button type="submit" class="px-4 py-1 text-xs bg-primary hover:bg-blue-700 text-white font-semibold rounded shadow-sm">Submit Review</button>
+                        <button type="button" onclick="document.getElementById('feedbackModal').classList.add('hidden')"
+                            class="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-100">Cancel</button>
+                        <button type="submit"
+                            class="px-4 py-1 text-xs bg-primary hover:bg-blue-700 text-white font-semibold rounded shadow-sm">Submit
+                            Review</button>
                     </div>
                 </form>
             </div>
 
-            <% if (pilot.feedback && pilot.feedback.length > 0) { %>
+            <% if (pilot.feedback && pilot.feedback.length> 0) { %>
                 <div class="space-y-4">
-                    <% pilot.feedback.forEach(item => { %>
+                    <% pilot.feedback.forEach(item=> { %>
                         <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-bold text-sm text-gray-900"><%= item.submittedBy ? item.submittedBy.name : 'Evaluator' %></span>
-                                    <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-medium"><%= item.submittedBy ? item.submittedBy.role : 'REVIEWER' %></span>
+                                    <span class="font-bold text-sm text-gray-900">
+                                        <%= item.submittedBy ? item.submittedBy.name : 'Evaluator' %>
+                                    </span>
+                                    <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-medium">
+                                        <%= item.submittedBy ? item.submittedBy.role : 'REVIEWER' %>
+                                    </span>
                                 </div>
                                 <div class="flex items-center text-amber-500 font-bold text-xs">
                                     ★ <%= item.rating %>/5
@@ -251,76 +318,99 @@
                             </div>
                             <p class="text-xs text-gray-700 italic">"<%= item.comments %>"</p>
                             <div class="flex gap-4 mt-3 text-[11px] text-gray-500">
-                                <span>Usability: <strong class="text-gray-700"><%= item.usability %></strong></span>
-                                <span>Effectiveness: <strong class="text-gray-700"><%= item.effectiveness %></strong></span>
-                                <span>Reliability: <strong class="text-gray-700"><%= item.reliability %></strong></span>
+                                <span>Usability: <strong class="text-gray-700">
+                                        <%= item.usability %>
+                                    </strong></span>
+                                <span>Effectiveness: <strong class="text-gray-700">
+                                        <%= item.effectiveness %>
+                                    </strong></span>
+                                <span>Reliability: <strong class="text-gray-700">
+                                        <%= item.reliability %>
+                                    </strong></span>
                             </div>
                         </div>
-                    <% }) %>
+                        <% }) %>
                 </div>
-            <% } else { %>
-                <div class="text-center py-6 text-gray-400 text-xs italic">
-                    No stakeholder feedback logged yet. Use the button above to record observations.
-                </div>
-            <% } %>
+                <% } else { %>
+                    <div class="text-center py-6 text-gray-400 text-xs italic">
+                        No stakeholder feedback logged yet. Use the button above to record observations.
+                    </div>
+                    <% } %>
         </div>
 
     </div>
 
     <!-- Right Sidebar -->
     <div class="space-y-6">
-        
+
         <!-- Actions (For Govt/Evaluator/Admin) -->
-        <% if (user.role === 'GOVERNMENT' || user.role === 'EVALUATOR' || user.role === 'ADMIN') { %>
+        <% if (user.role==='GOVERNMENT' || user.role==='EVALUATOR' || user.role==='ADMIN' ) { %>
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 class="text-base font-bold text-gray-900 mb-4">Pilot Governance Actions</h2>
                 <div class="space-y-3">
-                    <% if (pilot.status === 'ACTIVE' || pilot.status === 'COMPLETED') { %>
-                        <a href="/government/pilots/<%= pilot._id %>/validation" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm">
+                    <% if (pilot.status==='ACTIVE' || pilot.status==='COMPLETED' ) { %>
+                        <a href="/government/pilots/<%= pilot._id %>/validation"
+                            class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm">
                             Validate & Recommend
                         </a>
-                    <% } %>
-                    <button onclick="document.getElementById('evidenceModal').classList.remove('hidden')" class="block w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">
-                        Upload Evidence Artifact
-                    </button>
-                    <button onclick="document.getElementById('feedbackModal').classList.remove('hidden')" class="block w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">
-                        Record Operational Feedback
-                    </button>
+                        <% } %>
+                            <button onclick="document.getElementById('evidenceModal').classList.remove('hidden')"
+                                class="block w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">
+                                Upload Evidence Artifact
+                            </button>
+                            <button onclick="document.getElementById('feedbackModal').classList.remove('hidden')"
+                                class="block w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">
+                                Record Operational Feedback
+                            </button>
                 </div>
             </div>
-        <% } %>
+            <% } %>
 
-        <!-- Validation & Recommendation Decision Card -->
-        <% if (validation || recommendation) { %>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 class="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Final Decision & Scale-Up</h2>
-                
-                <% if (validation) { %>
-                    <div class="mb-4">
-                        <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Validation Assessment</span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
+                <!-- Validation & Recommendation Decision Card -->
+                <% if (validation || recommendation) { %>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Final Decision
+                            & Scale-Up</h2>
+
+                        <% if (validation) { %>
+                            <div class="mb-4">
+                                <span
+                                    class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Validation
+                                    Assessment</span>
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
                             <%= validation.validationStatus === 'VALIDATED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
-                            <%= validation.validationStatus.replace(/_/g, ' ') %>
-                        </span>
-                        <% if (validation.comments) { %>
-                            <p class="text-xs text-gray-600 mt-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100"><%= validation.comments %></p>
-                        <% } %>
+                                    <%= validation.validationStatus.replace(/_/g, ' ' ) %>
+                                </span>
+                                <% if (validation.comments) { %>
+                                    <p
+                                        class="text-xs text-gray-600 mt-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                                        <%= validation.comments %>
+                                    </p>
+                                    <% } %>
+                            </div>
+                            <% } %>
+
+                                <% if (recommendation) { %>
+                                    <div>
+                                        <span
+                                            class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Procurement
+                                            Recommendation</span>
+                                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                            <h4
+                                                class="font-extrabold text-base mb-1.5 <%= recommendation.recommendation === 'SCALE_UP' ? 'text-green-700' : 'text-amber-700' %>">
+                                                🚀 <%= recommendation.recommendation.replace(/_/g, ' ' ) %>
+                                            </h4>
+                                            <p class="text-xs text-gray-600 leading-relaxed">
+                                                <%= recommendation.reason %>
+                                            </p>
+                                        </div>
+                                        <p class="text-[11px] text-gray-400 mt-2 italic">Generated by <%=
+                                                recommendation.generatedBy %>
+                                        </p>
+                                    </div>
+                                    <% } %>
                     </div>
-                <% } %>
-                
-                <% if (recommendation) { %>
-                    <div>
-                        <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Procurement Recommendation</span>
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <h4 class="font-extrabold text-base mb-1.5 <%= recommendation.recommendation === 'SCALE_UP' ? 'text-green-700' : 'text-amber-700' %>">
-                                🚀 <%= recommendation.recommendation.replace(/_/g, ' ') %>
-                            </h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><%= recommendation.reason %></p>
-                        </div>
-                        <p class="text-[11px] text-gray-400 mt-2 italic">Generated by <%= recommendation.generatedBy %></p>
-                    </div>
-                <% } %>
-            </div>
-        <% } %>
+                    <% } %>
     </div>
 </div>
